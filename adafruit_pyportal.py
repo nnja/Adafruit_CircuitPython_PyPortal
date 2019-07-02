@@ -541,15 +541,16 @@ class PyPortal:
             gc.collect()
         return value
 
-    def get_local_time(self, location=None):
+    def get_local_time(self, location=None, reraise_exceptions=False, retries_on_exception=3):
         # pylint: disable=line-too-long
         """Fetch and "set" the local time of this microcontroller to the local time at the location, using an internet time API.
 
         :param str location: Your city and country, e.g. ``"New York, US"``.
-
+        :param reraise_exceptions: Optional flag to allow re-raising connection exceptions.
+        :param retries_on_exception: Retries to attempt before re-raising exceptions if reraise_exceptions is True.
         """
         # pylint: enable=line-too-long
-        self._connect_esp()
+        self._connect_esp(reraise_exceptions=reraise_exceptions, retries_on_exception=retries_on_exception)
         api_url = None
         try:
             aio_username = secrets['aio_username']
@@ -631,7 +632,8 @@ class PyPortal:
         if not content_length == os.stat(filename)[6]:
             raise RuntimeError
 
-    def _connect_esp(self):
+    def _connect_esp(self, reraise_exceptions=False, retries_on_exception=3):
+        retries = 0
         self.neo_status((0, 0, 100))
         while not self._esp.is_connected:
             # secrets dictionary must contain 'ssid' and 'password' at a minimum
@@ -649,7 +651,13 @@ class PyPortal:
                 self._esp.connect(secrets)
             except RuntimeError as error:
                 print("Could not connect to internet", error)
+
+                if reraise_exceptions and retries == retries_on_exception - 1:
+                    print("Tried to connect %s times. Raising exception." % retries_on_exception)
+                    raise
+
                 print("Retrying in 3 seconds...")
+                retries += 1
                 time.sleep(3)
 
     @staticmethod
