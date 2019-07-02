@@ -637,12 +637,14 @@ class PyPortal:
             # secrets dictionary must contain 'ssid' and 'password' at a minimum
             print("Connecting to AP", secrets['ssid'])
             if secrets['ssid'] == 'CHANGE ME' or secrets['ssid'] == 'CHANGE ME':
-                change_me = "\n"+"*"*45
-                change_me += "\nPlease update the 'secrets.py' file on your\n"
-                change_me += "CIRCUITPY drive to include your local WiFi\n"
-                change_me += "access point SSID name in 'ssid' and SSID\n"
-                change_me += "password in 'password'. Then save to reload!\n"
-                change_me += "*"*45
+                change_me = (
+                    "\n{delim}"
+                    "\nPlease update the 'secrets.py' file on your\n"
+                    "CIRCUITPY drive to include your local WiFi\n"
+                    "access point SSID name in 'ssid' and SSID\n"
+                    "password in 'password'. Then save to reload!\n"
+                    "{delim}".format(delim="*" * 45)
+                )
                 raise OSError(change_me)
             self.neo_status((100, 0, 0)) # red = not connected
             try:
